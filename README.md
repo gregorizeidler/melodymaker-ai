@@ -9,7 +9,7 @@
 [![Prisma](https://img.shields.io/badge/Prisma-6.5-2D3748)](https://www.prisma.io/)
 [![Modal](https://img.shields.io/badge/Modal-AI-purple)](https://modal.com/)
 [![Better Auth](https://img.shields.io/badge/Better_Auth-1.3-green)](https://better-auth.dev/)
-[![Inngest](https://img.shields.io/badge/Inngest-3.43-orange)](https://www.inngest.com/)
+[![Inngest](https://img.shields.io/badge/Inngest-3.43-orange)](https://www.inngest.com/)     
 
 Create, remix, share, and discover original music tracks using state-of-the-art AI models.
 
