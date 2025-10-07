@@ -1,0 +1,215 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  bio           String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  credits       Int       @default(100)
+  likes         Like[]
+  songs         Song[]
+  comments      Comment[]
+  playlists     Playlist[]
+  favorites     Favorite[]
+  following     Follow[]   @relation("UserFollowing")
+  followers     Follow[]   @relation("UserFollowers")
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Song {
+  id                String     @id @default(cuid())
+  title             String
+  s3Key             String?
+  thumbnailS3Key    String?
+  status            String     @default("queued")
+  instrumental      Boolean    @default(false)
+  prompt            String?
+  lyrics            String?
+  fullDescribedSong String?
+  describedLyrics   String?
+  guidanceScale     Float?
+  inferStep         Float?
+  audioDuration     Float?
+  seed              Float?
+  bpm               Int?
+  published         Boolean    @default(false)
+  listenCount       Int        @default(0)
+  downloadCount     Int        @default(0)
+  parentSongId      String?    // For remixes
+  isRemix           Boolean    @default(false)
+  likes             Like[]
+  categories        Category[]
+  comments          Comment[]
+  favorites         Favorite[]
+  playlistSongs     PlaylistSong[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  parentSong Song?  @relation("SongRemixes", fields: [parentSongId], references: [id], onDelete: SetNull)
+  remixes    Song[] @relation("SongRemixes")
+
+  @@index([s3Key])
+  @@index([userId])
+  @@index([published])
+  @@index([createdAt])
+}
+
+model Like {
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId    String
+  createdAt DateTime @default(now())
+
+  @@id([userId, songId])
+  @@index([songId])
+}
+
+model Category {
+  id    String @id @default(cuid())
+  name  String @unique
+  songs Song[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  song   Song   @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId String
+
+  @@index([songId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Favorite {
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId    String
+  createdAt DateTime @default(now())
+
+  @@id([userId, songId])
+  @@index([userId])
+}
+
+model Follow {
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  followerId  String
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  followingId String
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model Playlist {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isPublic    Boolean  @default(true)
+  coverImage  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  playlistSongs PlaylistSong[]
+
+  @@index([userId])
+}
+
+model PlaylistSong {
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  playlistId String
+  song       Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId     String
+  position   Int
+  addedAt    DateTime @default(now())
+
+  @@id([playlistId, songId])
+  @@index([playlistId])
+}
